@@ -7,6 +7,7 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
 import android.util.AttributeSet;
+import android.view.MotionEvent;
 import android.view.View;
 
 import androidx.annotation.Nullable;
@@ -22,6 +23,8 @@ public class MyCanvasView extends View {
     private Bitmap mExstraBitmap;
     private Rect mFrame;
 
+    private float mX, mY;
+    private static final float TOUCH_TOLERANCE = 4;
 
     public MyCanvasView(Context context) {
         this(context, null);
@@ -64,5 +67,52 @@ public class MyCanvasView extends View {
         super.onDraw(canvas);
         canvas.drawBitmap(mExstraBitmap, 0, 0, null);
         canvas.drawRect(mFrame, mPaint);
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        float x = event.getX();
+        float y = event.getY();
+
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                touchStart(x, y);
+                break;
+
+            case MotionEvent.ACTION_MOVE:
+                touchMove(x,y);
+                invalidate();
+                break;
+
+                case MotionEvent.ACTION_UP:
+                    touchUp();
+                    break;
+
+            default:
+        }
+        return true;
+    }
+
+    private void touchUp() {
+        mPath.reset();
+    }
+
+    private void touchMove(float x, float y) {
+        float dx = Math.abs(x-mX);
+        float dy = Math.abs(y-mY);
+
+        if (dx >= TOUCH_TOLERANCE || dy >= TOUCH_TOLERANCE) {
+            mPath.quadTo(mX, mY, (x+mX)/2, (y+mY)/2);
+            mX = x;
+            mY = y;
+
+            mExtraCanvas.drawPath(mPath,mPaint);
+        }
+    }
+
+    private void touchStart(float x, float y) {
+        mPath.moveTo(x,y);
+        mX = x;
+        mY = y;
     }
 }
